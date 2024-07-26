@@ -43,5 +43,6 @@ def main():
         except requests.exceptions.ConnectionError:
             print("Проверьте интернет соединение")
 
+
 if __name__ == '__main__':
     main()
