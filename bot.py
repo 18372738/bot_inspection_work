@@ -4,27 +4,26 @@ from environs import Env
 from time import sleep
 
 
-env = Env()
-env.read_env()
-
-DEVMAN_TOKEN = env.str('DEVMAN_TOKEN')
-TELEGRAM_TOKEN = env.str('TELEGRAM_TOKEN')
-CHAT_ID = env.str('CHAT_ID')
-
-
-def send_message(attempt):
+def send_message(attempt, telegram_token, chat_id):
     message = f"Преподаватель проверил работу «{attempt['lesson_title']}» {attempt['lesson_url']}.\n"
     if attempt['is_negative']:
         message += "К сожалению в работе нашлись ошибки"
     else:
         message += "Преподавтелю все понравилось, можете приступать к следующему уроку"
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=CHAT_ID, text=message)
+    bot = telegram.Bot(token=telegram_token)
+    bot.send_message(chat_id=chat_id, text=message)
 
 
 def main():
+    env = Env()
+    env.read_env()
+
+    devman_token = env.str('DEVMAN_TOKEN')
+    telegram_token = env.str('TELEGRAM_TOKEN')
+    chat_id = env.str('CHAT_ID')
+
     headers = {
-        "Authorization": f"Token {DEVMAN_TOKEN}",
+        "Authorization": f"Token {devman_token}",
     }
     url = "https://dvmn.org/api/long_polling/"
     params = {
@@ -38,7 +37,7 @@ def main():
             if new_attempts['status'] == 'found':
                 params['timestamp'] = new_attempts['last_attempt_timestamp']
                 attempt = new_attempts['new_attempts'][0]
-                send_message(attempt)
+                send_message(attempt, telegram_token, chat_id)
             else:
                 params['timestamp'] = new_attempts['timestamp_to_request']
         except requests.exceptions.ReadTimeout:
