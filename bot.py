@@ -4,9 +4,27 @@ from environs import Env
 from time import sleep
 
 
-def get_and_send_result_inspection(devman_token, telegram_token, chat_id):
+env = Env()
+env.read_env()
+
+DEVMAN_TOKEN = env.str('DEVMAN_TOKEN')
+TELEGRAM_TOKEN = env.str('TELEGRAM_TOKEN')
+CHAT_ID = env.str('CHAT_ID')
+
+
+def send_message(attempt):
+    message = f"Преподаватель проверил работу «{attempt['lesson_title']}» {attempt['lesson_url']}.\n"
+    if attempt['is_negative']:
+        message += "К сожалению в работе нашлись ошибки"
+    else:
+        message += "Преподавтелю все понравилось, можете приступать к следующему уроку"
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    bot.send_message(chat_id=CHAT_ID, text=message)
+
+
+def main():
     headers = {
-        "Authorization": f"Token {devman_token}",
+        "Authorization": f"Token {DEVMAN_TOKEN}",
     }
     url = "https://dvmn.org/api/long_polling/"
     params = {
@@ -20,30 +38,14 @@ def get_and_send_result_inspection(devman_token, telegram_token, chat_id):
             if new_attempts['status'] == 'found':
                 params['timestamp'] = new_attempts['last_attempt_timestamp']
                 attempt = new_attempts['new_attempts'][0]
-                message = f"Преподаватель проверил работу «{attempt['lesson_title']}» {attempt['lesson_url']}.\n"
-                if attempt['is_negative']:
-                    message += "К сожалению в работе нашлись ошибки"
-                else:
-                    message += "Преподавтелю все понравилось, можете приступать к следующему уроку"
-                bot = telegram.Bot(token=telegram_token)
-                bot.send_message(chat_id=chat_id, text=message)
+                send_message(attempt)
             else:
                 params['timestamp'] = new_attempts['timestamp_to_request']
         except requests.exceptions.ReadTimeout:
-            print("Ожидание ответа сервера")
             continue
         except requests.exceptions.ConnectionError:
             print("Проверьте интернет соединение")
             time.sleep(10)
-
-
-def main():
-    env = Env()
-    env.read_env()
-    devman_token = env.str('DEVMAN_TOKEN')
-    telegram_token = env.str('TELEGRAM_TOKEN')
-    chat_id = env.str('CHAT_ID')
-    get_and_send_result_inspection(devman_token, telegram_token, chat_id)
 
 
 if __name__ == '__main__':
