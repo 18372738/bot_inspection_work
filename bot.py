@@ -5,9 +5,7 @@ from environs import Env
 from time import sleep
 
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
 def send_message(attempt, telegram_token, chat_id):
