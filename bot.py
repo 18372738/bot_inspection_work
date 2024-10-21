@@ -17,12 +17,13 @@ class TelegramLogsHandler(logging.Handler):
         self.bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
-def send_message(attempt, telegram_token, chat_id, bot):
+def send_message(attempt, telegram_token, chat_id):
     message = f"Преподаватель проверил работу «{attempt['lesson_title']}» {attempt['lesson_url']}.\n"
     if attempt['is_negative']:
         message += "К сожалению в работе нашлись ошибки"
     else:
         message += "Преподавтелю все понравилось, можете приступать к следующему уроку"
+    bot = telegram.Bot(token=telegram_token)
     bot.send_message(chat_id=chat_id, text=message)
 
 
@@ -36,6 +37,7 @@ def main():
 
     devman_token = env.str('DEVMAN_TOKEN')
     telegram_token = env.str('TELEGRAM_TOKEN')
+    telegram_logger = env.str('TELEGRAM_LOGGER')
     chat_id = env.str('CHAT_ID')
     headers = {
         "Authorization": f"Token {devman_token}",
@@ -44,7 +46,7 @@ def main():
     params = {
         "timestamp" : None,
     }
-    bot = telegram.Bot(token=telegram_token)
+    bot = telegram.Bot(token=telegram_logger)
 
     logger.addHandler(TelegramLogsHandler(bot, chat_id))
     logging.info("Бот запущен и ожидает проверок...")
@@ -57,7 +59,7 @@ def main():
             if new_attempts['status'] == 'found':
                 params['timestamp'] = new_attempts['last_attempt_timestamp']
                 attempt = new_attempts['new_attempts'][0]
-                send_message(attempt, telegram_token, chat_id, bot)
+                send_message(attempt, telegram_token, chat_id)
             else:
                 params['timestamp'] = new_attempts['timestamp_to_request']
         except requests.ReadTimeout:
