@@ -44,7 +44,7 @@ def main():
     }
     url = "https://dvmn.org/api/long_polling/"
     params = {
-        "timestamp" : None,
+        "timestamp": None,
     }
     bot = telegram.Bot(token=telegram_logger)
 
@@ -53,7 +53,12 @@ def main():
 
     while True:
         try:
-            response = requests.get(url, headers=headers, params=params, timeout=120)
+            response = requests.get(
+                url,
+                headers=headers,
+                params=params,
+                timeout=120,
+            )
             response.raise_for_status()
             new_attempts = response.json()
             if new_attempts['status'] == 'found':
