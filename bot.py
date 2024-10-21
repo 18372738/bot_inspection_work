@@ -49,7 +49,7 @@ def main():
     bot = telegram.Bot(token=telegram_logger)
 
     logger.addHandler(TelegramLogsHandler(bot, chat_id))
-    logging.info("Бот запущен и ожидает проверок...")
+    logger.info("Бот запущен и ожидает проверок...")
 
     while True:
         try:
@@ -65,7 +65,7 @@ def main():
         except requests.ReadTimeout:
             continue
         except requests.ConnectionError:
-            logging.warning("Нет интернет соединения.")
+            logger.warning("Нет интернет соединения.")
             time.sleep(10)
         except Exception as error:
             logger.error(f'Бот упал с ошибкой:\n{error}')
